@@ -55,7 +55,6 @@ sync_config() {
             stream_block+="        listen $local_port;\n"
             stream_block+="        listen $local_port udp;\n"
             stream_block+="        proxy_pass $remote_target;\n"
-            stream_block+="        proxy_connect_timeout 5s;\n"
             stream_block+="        proxy_timeout 1h;\n"
             stream_block+="    }\n"
 
