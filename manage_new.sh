@@ -66,7 +66,7 @@ sync_config() {
     done < "$DOMAINS_FILE"
 
     stream_block="stream {\n${stream_content}}\n"
-    http_block="http {\n    include /etc/nginx/mime.types;\n    access_log off;\n    server {\n        listen 80;\n        location / {\n            return 200 'Nginx Stream Proxy Running';\n        }\n    }\n}"
+    http_block="http {\n    include /etc/nginx/mime.types;\n    access_log off;\n    server {\n        listen 80;\n        location / {\n            return 200 '';\n        }\n    }\n}"
 
     # 使用 printf 替代 echo -e，防止写入 -e 到配置文件
     printf "${head_part}\n${events_end}\n\n${stream_block}\n${http_block}\n" > $NGINX_CONF
