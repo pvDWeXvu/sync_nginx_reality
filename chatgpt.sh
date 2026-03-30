@@ -39,7 +39,9 @@ sync_config() {
     cp $NGINX_CONF "${NGINX_CONF}.bak"
 
     # ===== 全局优化 =====
-    head_part="worker_processes auto;
+    # 在这里加上 load_module
+    head_part="load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+worker_processes auto;
 
 events {
     worker_connections 10240;
