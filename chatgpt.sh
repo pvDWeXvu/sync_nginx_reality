@@ -71,7 +71,6 @@ events {
 
         line="${line}        proxy_buffer_size 16k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
-        line="${line}        so_keepalive on;\n"
         line="${line}        proxy_half_close on;\n"
         line="${line}        tcp_nodelay on;\n"
 
