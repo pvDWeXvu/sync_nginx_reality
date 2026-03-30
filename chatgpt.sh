@@ -22,7 +22,7 @@ EOF
 
 show_menu() {
     echo "=============================="
-    echo "   Nginx Stream 转发管理 (抗探测版)"
+    echo "    Nginx Stream 转发管理 (抗探测版)"
     echo "=============================="
     echo "1. 编辑 domains.txt"
     echo "2. 同步配置并重启 (含抗探测)"
@@ -39,7 +39,8 @@ sync_config() {
     cp $NGINX_CONF "${NGINX_CONF}.bak"
 
     # ===== 全局优化 =====
-    # 在这里加上 load_module
+    # 如果是 Ubuntu 使用 /usr/lib/nginx/modules/ngx_stream_module.so
+    # 如果是 CentOS 使用 modules/ngx_stream_module.so
     head_part="load_module /usr/lib/nginx/modules/ngx_stream_module.so;
 worker_processes auto;
 
@@ -66,7 +67,8 @@ events {
 
         # ===== server =====
         line="    server {\n"
-        line="${line}        listen $local_port reuseport fastopen=256; # 开启 FastOpen 减少往返
+        # --- 修正点：补齐了引号、换行符 ---
+        line="${line}        listen $local_port reuseport fastopen=256;\n" 
         line="${line}        proxy_pass backend_$local_port;\n"
         line="${line}        proxy_buffer_size 4k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
@@ -82,7 +84,7 @@ events {
 
         stream_content="${stream_content}${upstream}${line}"
 
-        echo "添加规则(抗探测): $local_port reuseport fastopen=256 -> $remote_target"
+        echo "添加规则(抗探测): $local_port -> $remote_target"
     done < "$DOMAINS_FILE"
 
     # ===== stream 块 =====
