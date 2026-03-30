@@ -66,16 +66,16 @@ events {
 
         # ===== server =====
         line="    server {\n"
-        line="${line}        listen $local_port reuseport;\n"
+        line="${line}        listen $local_port reuseport fastopen=256; # 开启 FastOpen 减少往返
         line="${line}        proxy_pass backend_$local_port;\n"
-        line="${line}        proxy_buffer_size 16k;\n"
+        line="${line}        proxy_buffer_size 4k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
         line="${line}        proxy_half_close on;\n"
         line="${line}        tcp_nodelay on;\n"
 
         # 🔥 关键：快速失败 → fallback
-        line="${line}        proxy_connect_timeout 2s;\n"
-        line="${line}        proxy_timeout 3m;\n"
+        line="${line}        proxy_connect_timeout 5s;\n"
+        line="${line}        proxy_timeout 10m;\n"
 
         line="${line}        limit_conn addr 20;\n"
         line="${line}    }\n"
