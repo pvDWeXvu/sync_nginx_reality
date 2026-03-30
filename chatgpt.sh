@@ -82,7 +82,7 @@ events {
 
         stream_content="${stream_content}${upstream}${line}"
 
-        echo "添加规则(抗探测): $local_port -> $remote_target"
+        echo "添加规则(抗探测): $local_port reuseport fastopen=256 -> $remote_target"
     done < "$DOMAINS_FILE"
 
     # ===== stream 块 =====
