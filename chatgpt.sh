@@ -68,7 +68,6 @@ events {
         line="    server {\n"
         line="${line}        listen $local_port reuseport;\n"
         line="${line}        proxy_pass backend_$local_port;\n"
-
         line="${line}        proxy_buffer_size 16k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
         line="${line}        proxy_half_close on;\n"
