@@ -36,11 +36,10 @@ sync_config() {
     echo "正在生成 Nginx 配置..."
 
     [ ! -f "$DOMAINS_FILE" ] && touch "$DOMAINS_FILE"
-    cp $NGINX_CONF "${NGINX_CONF}.bak"
+    cp "$NGINX_CONF" "${NGINX_CONF}.bak"
 
     # ===== 全局优化 =====
-    # 如果是 Ubuntu 使用 /usr/lib/nginx/modules/ngx_stream_module.so
-    # 如果是 CentOS 使用 modules/ngx_stream_module.so
+    # 请根据系统确认模块路径：Ubuntu 为 /usr/lib/nginx/modules/ngx_stream_module.so
     head_part="load_module /usr/lib/nginx/modules/ngx_stream_module.so;
 worker_processes auto;
 
@@ -49,14 +48,11 @@ events {
     multi_accept on;
 }"
 
-    # ===== stream 内容（真实网站 fallback）=====
     stream_content=""
 
     while IFS=',' read -r local_port remote_target
     do
-        if [ -z "$local_port" ] || [ -z "$remote_target" ]; then
-            continue
-        fi
+        [ -z "$local_port" ] || [ -z "$remote_target" ] && continue
 
         # ===== upstream =====
         upstream="    upstream backend_$local_port {\n"
@@ -67,58 +63,49 @@ events {
 
         # ===== server =====
         line="    server {\n"
-        # --- 修正点：补齐了引号、换行符 ---
-        line="${line}        listen $local_port reuseport fastopen=256;\n" 
+        line="${line}        listen $local_port reuseport fastopen=256;\n"
         line="${line}        proxy_pass backend_$local_port;\n"
         line="${line}        proxy_buffer_size 4k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
         line="${line}        proxy_half_close on;\n"
         line="${line}        tcp_nodelay on;\n"
-
-        # 🔥 关键：快速失败 → fallback
         line="${line}        proxy_connect_timeout 5s;\n"
         line="${line}        proxy_timeout 10m;\n"
-
         line="${line}        limit_conn addr 20;\n"
         line="${line}    }\n"
 
         stream_content="${stream_content}${upstream}${line}"
-
-        echo "添加规则(抗探测): $local_port -> $remote_target"
+        
+        # 修正报错行：去掉中文括号，确保无特殊空格
+        echo "Adding Rule: $local_port -> $remote_target"
     done < "$DOMAINS_FILE"
 
-    # ===== stream 块 =====
     stream_block="stream {
     limit_conn_zone \$binary_remote_addr zone=addr:10m;
-
 ${stream_content}
-}
-"
+}"
 
-    # ===== http 伪装 =====
     http_block="http {
     include /etc/nginx/mime.types;
     access_log off;
-
     server {
         listen 80;
         location / {
-            return 200 '';
+            return 200 'Nginx is running';
         }
     }
-}
-"
+}"
 
     # ===== 写入配置 =====
-    printf "${head_part}\n\n${stream_block}\n${http_block}\n" > $NGINX_CONF
+    printf "${head_part}\n\n${stream_block}\n\n${http_block}\n" > "$NGINX_CONF"
 
     nginx -t
     if [ $? -eq 0 ]; then
         systemctl restart nginx
-        echo "✅ Nginx 已应用抗探测配置并重启成功！"
+        echo "✅ Nginx 配置应用成功！"
     else
         echo "❌ 配置错误，正在回滚..."
-        cp "${NGINX_CONF}.bak" $NGINX_CONF
+        cp "${NGINX_CONF}.bak" "$NGINX_CONF"
     fi
 }
 
