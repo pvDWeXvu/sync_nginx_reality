@@ -63,15 +63,15 @@ events {
 
         # ===== server =====
         line="    server {\n"
-        line="${line}        listen $local_port reuseport fastopen=256;\n"
+        line="${line}        listen $listen $local_port reuseport;\n"
         line="${line}        proxy_pass backend_$local_port;\n"
         line="${line}        proxy_buffer_size 4k;\n"
         line="${line}        proxy_socket_keepalive on;\n"
         line="${line}        proxy_half_close on;\n"
         line="${line}        tcp_nodelay on;\n"
-        line="${line}        proxy_connect_timeout 5s;\n"
-        line="${line}        proxy_timeout 10m;\n"
-        line="${line}        limit_conn addr 20;\n"
+        line="${line}        proxy_connect_timeout 10s;\n"
+        line="${line}        proxy_timeout 30m;\n"
+       #line="${line}        limit_conn addr 20;\n"
         line="${line}    }\n"
 
         stream_content="${stream_content}${upstream}${line}"
@@ -81,7 +81,7 @@ events {
     done < "$DOMAINS_FILE"
 
     stream_block="stream {
-    limit_conn_zone \$binary_remote_addr zone=addr:10m;
+   #limit_conn_zone \$binary_remote_addr zone=addr:10m;
 ${stream_content}
 }"
 
